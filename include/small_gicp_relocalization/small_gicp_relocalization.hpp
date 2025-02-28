@@ -61,12 +61,14 @@ private:
   std::string base_frame_;
   std::string robot_base_frame_;
   std::string lidar_frame_;
+  std::string current_scan_frame_id_;
   rclcpp::Time last_scan_time_;
   Eigen::Isometry3d result_t_;
   Eigen::Isometry3d previous_result_t_;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr global_map_;
   pcl::PointCloud<pcl::PointXYZ>::Ptr registered_scan_;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr accumulated_cloud_;
   pcl::PointCloud<pcl::PointCovariance>::Ptr target_;
   pcl::PointCloud<pcl::PointCovariance>::Ptr source_;
 
@@ -76,13 +78,12 @@ private:
     small_gicp::Registration<small_gicp::GICPFactor, small_gicp::ParallelReductionOMP>>
     register_;
 
-  std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-
   rclcpp::TimerBase::SharedPtr transform_timer_;
   rclcpp::TimerBase::SharedPtr register_timer_;
 
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
+  std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 };
 
 }  // namespace small_gicp_relocalization

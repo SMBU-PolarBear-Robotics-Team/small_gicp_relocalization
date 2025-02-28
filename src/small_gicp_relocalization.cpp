@@ -52,7 +52,7 @@ SmallGicpRelocalizationNode::SmallGicpRelocalizationNode(const rclcpp::NodeOptio
   this->get_parameter("lidar_frame", lidar_frame_);
   this->get_parameter("prior_pcd_file", prior_pcd_file_);
 
-  registered_scan_ = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
+  accumulated_cloud_ = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
   global_map_ = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
   register_ = std::make_shared<
     small_gicp::Registration<small_gicp::GICPFactor, small_gicp::ParallelReductionOMP>>();
@@ -124,24 +124,29 @@ void SmallGicpRelocalizationNode::registeredPcdCallback(
   const sensor_msgs::msg::PointCloud2::SharedPtr msg)
 {
   last_scan_time_ = msg->header.stamp;
+  current_scan_frame_id_ = msg->header.frame_id;
 
-  pcl::fromROSMsg(*msg, *registered_scan_);
-
-  // Downsample Registered points and convert them into pcl::PointCloud<pcl::PointCovariance>.
-  source_ = small_gicp::voxelgrid_sampling_omp<
-    pcl::PointCloud<pcl::PointXYZ>, pcl::PointCloud<pcl::PointCovariance>>(
-    *registered_scan_, registered_leaf_size_);
-
-  // Estimate point covariances
-  small_gicp::estimate_covariances_omp(*source_, num_neighbors_, num_threads_);
-
-  // Create KdTree for source.
-  source_tree_ = std::make_shared<small_gicp::KdTree<pcl::PointCloud<pcl::PointCovariance>>>(
-    source_, small_gicp::KdTreeBuilderOMP(num_threads_));
+  pcl::PointCloud<pcl::PointXYZ>::Ptr scan(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(*msg, *scan);
+  *accumulated_cloud_ += *scan;
 }
 
 void SmallGicpRelocalizationNode::performRegistration()
 {
+  if (accumulated_cloud_->empty()) {
+    RCLCPP_WARN(this->get_logger(), "No accumulated points to process.");
+    return;
+  }
+
+  source_ = small_gicp::voxelgrid_sampling_omp<
+    pcl::PointCloud<pcl::PointXYZ>, pcl::PointCloud<pcl::PointCovariance>>(
+    *accumulated_cloud_, registered_leaf_size_);
+
+  small_gicp::estimate_covariances_omp(*source_, num_neighbors_, num_threads_);
+
+  source_tree_ = std::make_shared<small_gicp::KdTree<pcl::PointCloud<pcl::PointCovariance>>>(
+    source_, small_gicp::KdTreeBuilderOMP(num_threads_));
+
   if (!source_ || !source_tree_) {
     return;
   }
@@ -149,7 +154,6 @@ void SmallGicpRelocalizationNode::performRegistration()
   register_->reduction.num_threads = num_threads_;
   register_->rejector.max_dist_sq = max_dist_sq_;
 
-  // Align point clouds using the previous result as the initial transformation
   auto result = register_->align(*target_, *source_, *target_tree_, previous_result_t_);
 
   if (!result.converged) {
@@ -157,8 +161,9 @@ void SmallGicpRelocalizationNode::performRegistration()
     return;
   }
 
-  result_t_ = result.T_target_source;
-  previous_result_t_ = result.T_target_source;
+  result_t_ = previous_result_t_ = result.T_target_source;
+
+  accumulated_cloud_->clear();
 }
 
 void SmallGicpRelocalizationNode::publishTransform()
@@ -203,17 +208,16 @@ void SmallGicpRelocalizationNode::initialPoseCallback(
                                  .toRotationMatrix();
 
   try {
-    auto transform = tf_buffer_->lookupTransform(
-      robot_base_frame_, registered_scan_->header.frame_id, tf2::TimePointZero);
+    auto transform =
+      tf_buffer_->lookupTransform(robot_base_frame_, current_scan_frame_id_, tf2::TimePointZero);
     Eigen::Isometry3d robot_base_to_odom = tf2::transformToEigen(transform.transform);
     Eigen::Isometry3d map_to_odom = map_to_robot_base * robot_base_to_odom;
 
-    previous_result_t_ = map_to_odom;
-    result_t_ = map_to_odom;
+    previous_result_t_ = result_t_ = map_to_odom;
   } catch (tf2::TransformException & ex) {
     RCLCPP_WARN(
       this->get_logger(), "Could not transform initial pose from %s to %s: %s",
-      robot_base_frame_.c_str(), registered_scan_->header.frame_id.c_str(), ex.what());
+      robot_base_frame_.c_str(), current_scan_frame_id_.c_str(), ex.what());
   }
 }
 
