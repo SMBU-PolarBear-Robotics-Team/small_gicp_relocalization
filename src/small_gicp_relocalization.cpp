@@ -158,7 +158,6 @@ void SmallGicpRelocalizationNode::performRegistration()
 
   if (!result.converged) {
     RCLCPP_WARN(this->get_logger(), "GICP did not converge.");
-    return;
   }
 
   result_t_ = previous_result_t_ = result.T_target_source;
