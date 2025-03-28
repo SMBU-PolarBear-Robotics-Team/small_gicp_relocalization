@@ -153,14 +153,15 @@ void SmallGicpRelocalizationNode::performRegistration()
 
   register_->reduction.num_threads = num_threads_;
   register_->rejector.max_dist_sq = max_dist_sq_;
+  register_->optimizer.max_iterations = 10;
 
   auto result = register_->align(*target_, *source_, *target_tree_, previous_result_t_);
 
-  if (!result.converged) {
+  if (result.converged) {
+    result_t_ = previous_result_t_ = result.T_target_source;
+  } else {
     RCLCPP_WARN(this->get_logger(), "GICP did not converge.");
   }
-
-  result_t_ = previous_result_t_ = result.T_target_source;
 
   accumulated_cloud_->clear();
 }
