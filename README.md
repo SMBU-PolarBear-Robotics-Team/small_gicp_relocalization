@@ -20,7 +20,7 @@ Given a registered pointcloud (based on the odom frame) and prior pointcloud (ma
 mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
 
-git clone https://github.com/LihanChen2004/small_gicp_relocalization.git
+git clone https://github.com/SMBU-PolarBear-Robotics-Team/small_gicp_relocalization.git
 
 cd ..
 ```
@@ -34,7 +34,7 @@ cd ..
 2. Build
 
     ```zsh
-    colcon build --symlink-install -DCMAKE_BUILD_TYPE=release
+    colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=release
     ```
 
 ## Usage
