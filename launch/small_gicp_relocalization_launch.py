@@ -43,6 +43,7 @@ def generate_launch_description():
                 "base_frame": "",
                 "lidar_frame": "",
                 "prior_pcd_file": "",
+                "input_cloud_topic": "cloud_registered",
             }
         ],
     )

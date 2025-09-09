@@ -40,6 +40,7 @@ SmallGicpRelocalizationNode::SmallGicpRelocalizationNode(const rclcpp::NodeOptio
   this->declare_parameter("lidar_frame", "");
   this->declare_parameter("prior_pcd_file", "");
   this->declare_parameter("init_pose", std::vector<double>{0., 0., 0., 0., 0., 0.});
+  this->declare_parameter("input_cloud_topic", "registered_scan");
 
   this->get_parameter("num_threads", num_threads_);
   this->get_parameter("num_neighbors", num_neighbors_);
@@ -53,6 +54,7 @@ SmallGicpRelocalizationNode::SmallGicpRelocalizationNode(const rclcpp::NodeOptio
   this->get_parameter("lidar_frame", lidar_frame_);
   this->get_parameter("prior_pcd_file", prior_pcd_file_);
   this->get_parameter("init_pose", init_pose_);
+  this->get_parameter("input_cloud_topic", input_cloud_topic);
 
   // [x, y, z, roll, pitch, yaw] - init_pose parameters
   if (!init_pose_.empty() && init_pose_.size() >= 6) {
@@ -88,7 +90,7 @@ SmallGicpRelocalizationNode::SmallGicpRelocalizationNode(const rclcpp::NodeOptio
     target_, small_gicp::KdTreeBuilderOMP(num_threads_));
 
   pcd_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-    "registered_scan", 10,
+    input_cloud_topic, 10,
     std::bind(&SmallGicpRelocalizationNode::registeredPcdCallback, this, std::placeholders::_1));
 
   initial_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -102,6 +104,8 @@ SmallGicpRelocalizationNode::SmallGicpRelocalizationNode(const rclcpp::NodeOptio
   transform_timer_ = this->create_wall_timer(
     std::chrono::milliseconds(50),  // 20 Hz
     std::bind(&SmallGicpRelocalizationNode::publishTransform, this));
+  //Debug Info
+  std::cout << "\033[1;33mInput Cloud Topic: " << input_cloud_topic << "\033[0m" << std::endl;
 }
 
 void SmallGicpRelocalizationNode::loadGlobalMap(const std::string & file_name)
