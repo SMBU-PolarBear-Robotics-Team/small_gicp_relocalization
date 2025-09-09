@@ -40,7 +40,7 @@ SmallGicpRelocalizationNode::SmallGicpRelocalizationNode(const rclcpp::NodeOptio
   this->declare_parameter("lidar_frame", "");
   this->declare_parameter("prior_pcd_file", "");
   this->declare_parameter("init_pose", std::vector<double>{0., 0., 0., 0., 0., 0.});
-  this->declare_parameter("input_cloud_topic","registered_scan");
+  this->declare_parameter("input_cloud_topic", "registered_scan");
 
   this->get_parameter("num_threads", num_threads_);
   this->get_parameter("num_neighbors", num_neighbors_);
@@ -54,7 +54,7 @@ SmallGicpRelocalizationNode::SmallGicpRelocalizationNode(const rclcpp::NodeOptio
   this->get_parameter("lidar_frame", lidar_frame_);
   this->get_parameter("prior_pcd_file", prior_pcd_file_);
   this->get_parameter("init_pose", init_pose_);
-  this->get_parameter("input_cloud_topic",input_cloud_topic);
+  this->get_parameter("input_cloud_topic", input_cloud_topic);
 
   // [x, y, z, roll, pitch, yaw] - init_pose parameters
   if (!init_pose_.empty() && init_pose_.size() >= 6) {
@@ -105,7 +105,7 @@ SmallGicpRelocalizationNode::SmallGicpRelocalizationNode(const rclcpp::NodeOptio
     std::chrono::milliseconds(50),  // 20 Hz
     std::bind(&SmallGicpRelocalizationNode::publishTransform, this));
   //Debug Info
-  std::cout <<"\033[1;33mInput Cloud Topic: " << input_cloud_topic << "\033[0m" << std::endl;
+  RCLCPP_INFO(this->get_logger(), "Input Cloud Topic: %s", input_cloud_topic.c_str());
 }
 
 void SmallGicpRelocalizationNode::loadGlobalMap(const std::string & file_name)
