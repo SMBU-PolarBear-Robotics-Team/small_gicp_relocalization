@@ -104,7 +104,7 @@ SmallGicpRelocalizationNode::SmallGicpRelocalizationNode(const rclcpp::NodeOptio
   transform_timer_ = this->create_wall_timer(
     std::chrono::milliseconds(50),  // 20 Hz
     std::bind(&SmallGicpRelocalizationNode::publishTransform, this));
-  //Debug Info
+  // Debug Info
   std::cout << "\033[1;33mInput Cloud Topic: " << input_cloud_topic << "\033[0m" << std::endl;
 }
 
