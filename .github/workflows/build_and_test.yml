@@ -1,12 +1,6 @@
 name: Build
 on:
   pull_request:
-  push:
-    branches:
-      - humble*
-      - jazzy*
-      - main
-  workflow_dispatch:
 
 jobs:
   build_and_test:
