@@ -22,12 +22,12 @@ ament_auto_find_build_dependencies()
 
 # Add small_gicp dependency
 include(FetchContent)
-FetchContent_Declare(
+fetchcontent_declare(
   small_gicp
   GIT_REPOSITORY https://github.com/koide3/small_gicp.git
   GIT_TAG "master"
 )
-FetchContent_MakeAvailable(small_gicp)
+fetchcontent_makeavailable(small_gicp)
 
 ###########
 ## Build ##
