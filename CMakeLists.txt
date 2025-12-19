@@ -24,7 +24,7 @@ ament_auto_find_build_dependencies()
 if(NOT small_gicp_FOUND)
   # Not found, fallback to FetchContent
   message(STATUS
-    "System-installed small_gicp not found. Attempting to fetch small_gicp via FetchContent... "
+    "System-installed small_gicp not found. Attempting to fetch small_gicp via FetchContent..."
   )
 
   include(FetchContent)
