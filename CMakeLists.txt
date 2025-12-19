@@ -31,7 +31,7 @@ if(NOT small_gicp_FOUND)
   fetchcontent_declare(
     small_gicp
     GIT_REPOSITORY https://github.com/koide3/small_gicp.git
-    GIT_TAG master
+    GIT_TAG "master"
   )
 
   fetchcontent_makeavailable(small_gicp)
