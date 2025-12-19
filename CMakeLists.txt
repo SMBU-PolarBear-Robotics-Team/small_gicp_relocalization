@@ -18,16 +18,24 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(ament_cmake_auto REQUIRED)
 find_package(OpenMP REQUIRED)
+find_package(small_gicp QUIET)
 ament_auto_find_build_dependencies()
 
-# Add small_gicp dependency
-include(FetchContent)
-fetchcontent_declare(
-  small_gicp
-  GIT_REPOSITORY https://github.com/koide3/small_gicp.git
-  GIT_TAG "master"
-)
-fetchcontent_makeavailable(small_gicp)
+if(NOT small_gicp_FOUND)
+  # Not found, fallback to FetchContent
+  message(STATUS
+    "System-installed small_gicp not found. Attempting to fetch small_gicp via FetchContent..."
+  )
+
+  include(FetchContent)
+  fetchcontent_declare(
+    small_gicp
+    GIT_REPOSITORY https://github.com/koide3/small_gicp.git
+    GIT_TAG "master"
+  )
+
+  fetchcontent_makeavailable(small_gicp)
+endif()
 
 ###########
 ## Build ##
@@ -37,7 +45,10 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   DIRECTORY src
 )
 
-target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX small_gicp)
+target_link_libraries(${PROJECT_NAME}
+  OpenMP::OpenMP_CXX
+  small_gicp
+)
 
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN small_gicp_relocalization::SmallGicpRelocalizationNode
