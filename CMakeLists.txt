@@ -47,7 +47,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
 
 target_link_libraries(${PROJECT_NAME}
   OpenMP::OpenMP_CXX
-  small_gicp
+  small_gicp::small_gicp
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}
